@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: contrast-web
+  labels:
+    app: contrast-web
+spec:
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 8443
+      name: contrast-web-ssl
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+      name: contrast-web
+
+  selector:
+    app: contrast-web
+  type: NodePort    
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: contrast-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: contrast-web
+  template:
+    metadata:
+      labels:
+        app: contrast-web
+      name: contrast-web
+    spec:
+      containers:
+      - name: contrast-web
+        image: texanraj/webgoat:latest
+        imagePullPolicy: Never
+        volumeMounts:
+          - mountPath: /var/run/docker.sock
+            name: docker-socket-mount
+        ports:
+        - containerPort: 8080
+      volumes:
+        - name: docker-socket-mount
+          hostPath:
+            path: /var/run/docker.sock
